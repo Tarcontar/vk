@@ -1,20 +1,31 @@
 using System;
 using System.IO;
-using System.CommandLine;
 using System.Collections.Generic;
+using CommandLine;
 
 namespace Vk.Generator
 {
+public sealed class Options
+    {
+        [Option("out", Default = "", Required = false, HelpText = "The folder into which code is generated. Defaults to the application directory.")]
+        public string OutputPath { get; set; }
+    }
+
+
     public class Program
     {
         public static int Main(string[] args)
         {
             string outputPath = AppContext.BaseDirectory;
 
-            // ArgumentSyntax.Parse(args, s =>
-            // {
-            //     s.DefineOption("o|out", ref outputPath, "The folder into which code is generated. Defaults to the application directory.");
-            // });
+            CommandLine.Parser.Default.ParseArguments<Options>(args)
+            .WithParsed(o =>
+            {
+                if (o.OutputPath != "")
+                {
+                    outputPath = o.OutputPath;
+                }
+            });
 
             Configuration.CodeOutputPath = outputPath;
 

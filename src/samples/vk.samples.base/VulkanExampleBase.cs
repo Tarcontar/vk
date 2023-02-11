@@ -106,7 +106,7 @@ namespace Vk.Samples
         public void InitVulkan()
         {
             VkResult err;
-            err = CreateInstance(false);
+            err = CreateInstance(true);
             if (err != VkResult.Success)
             {
                 throw new InvalidOperationException("Could not create Vulkan instance. Error: " + err);
@@ -231,6 +231,11 @@ namespace Vk.Samples
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 instanceExtensions.Add(Strings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                instanceExtensions.Add(Strings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+                instanceExtensions.Add(Strings.VK_EXT_METAL_SURFACE_EXTENSION_NAME);
             }
             else
             {

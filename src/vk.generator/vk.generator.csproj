@@ -13,6 +13,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <PackageReference Include="System.CommandLine" Version="0.1.0-e160908-1" />
+   <PackageReference Include="CommandLineParser" Version="2.9.1" />
   </ItemGroup>
 </Project>
