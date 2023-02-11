@@ -11,10 +11,10 @@ namespace Vk.Generator
         {
             string outputPath = AppContext.BaseDirectory;
 
-            ArgumentSyntax.Parse(args, s =>
-            {
-                s.DefineOption("o|out", ref outputPath, "The folder into which code is generated. Defaults to the application directory.");
-            });
+            // ArgumentSyntax.Parse(args, s =>
+            // {
+            //     s.DefineOption("o|out", ref outputPath, "The folder into which code is generated. Defaults to the application directory.");
+            // });
 
             Configuration.CodeOutputPath = outputPath;
 

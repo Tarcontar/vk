@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net5;netstandard1.4</TargetFrameworks>
+    <TargetFrameworks>net7</TargetFrameworks>
     <OutputType>Library</OutputType>
     <AssemblyName>vk</AssemblyName>
     <AssemblyVersion>1.0.25</AssemblyVersion>
@@ -18,7 +18,7 @@
     <PackageTags>Vulkan Graphics 3D GPU Games Khronos</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Copyright>Copyright 2017 (c) Eric Mellino. All rights reserved.</Copyright>
-    <Authors>Eric Mellino</Authors>
+    <Authors>Eric Mellino, Michael Schnabel</Authors>
     <ProjectUrl>https://github.com/mellinoe/vk</ProjectUrl>
     <RepositoryUrl>https://github.com/mellinoe/vk</RepositoryUrl>
   </PropertyGroup>

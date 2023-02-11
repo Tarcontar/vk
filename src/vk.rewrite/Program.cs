@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using System;
 using System.Linq;
 using Mono.Collections.Generic;
+using System.CommandLine;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
@@ -21,11 +22,31 @@ namespace Vk.Rewrite
             string vkDllPath = null;
             string outputPath = null;
             bool copiedToTemp = false;
-            var s = System.CommandLine.ArgumentSyntax.Parse(args, syntax =>
-            {
-                syntax.DefineOption("vkdll", ref vkDllPath, "The location of vk.dll to rewrite.");
-                syntax.DefineOption("out", ref outputPath, "The output location of the rewritten DLL. If not specified, the DLL is rewritten in-place.");
-            });
+
+            var vkdllOption = new Option<string>(
+                name: "--vkdll",
+                description: "The location of vk.dll to rewrite.");
+            var outOption = new Option<string>(
+                name: "--out",
+                description: "The output location of the rewritten DLL. If not specified, the DLL is rewritten in-place.");
+
+            var rootCommand = new RootCommand("");
+            rootCommand.AddOption(vkdllOption);
+            rootCommand.AddOption(outOption);
+
+            rootCommand.SetHandler((path) => 
+                { 
+                    vkDllPath = path;
+                },
+                vkdllOption);
+
+            rootCommand.SetHandler((path) => 
+                { 
+                    outputPath = path;
+                },
+                outOption);
+
+            await rootCommand.InvokeAsync(args);
 
             if (vkDllPath == null)
             {
