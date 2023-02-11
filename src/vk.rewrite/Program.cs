@@ -1,15 +1,24 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using CommandLine;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using System;
-using System.Linq;
 using Mono.Collections.Generic;
-using System.CommandLine;
-using System.IO;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Vk.Rewrite
 {
+    public sealed class Options
+    {
+        [Option("vkdll", Default = "", Required = false, HelpText = "The location of vk.dll to rewrite.")]
+        public string VKDllPath { get; set; }
+
+        [Option("out", Default = "", Required = false, HelpText = "The output location of the rewritten DLL. If not specified, the DLL is rewritten in-place.")]
+        public string OutputPath { get; set; }
+    }
+
+
     public class Program
     {
         private static TypeReference s_calliRewriteRef;
@@ -23,45 +32,25 @@ namespace Vk.Rewrite
             string outputPath = null;
             bool copiedToTemp = false;
 
-            var vkdllOption = new Option<string>(
-                name: "--vkdll",
-                description: "The location of vk.dll to rewrite.");
-            var outOption = new Option<string>(
-                name: "--out",
-                description: "The output location of the rewritten DLL. If not specified, the DLL is rewritten in-place.");
+            CommandLine.Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(o =>
+                {
+                    vkDllPath = o.VKDllPath;
+                    if (o.OutputPath != "")
+                    {
+                        outputPath = o.OutputPath;
+                    }
+                    else
+                    {
+                        outputPath = vkDllPath;
+                        string copyPath = Path.GetTempFileName();
+                        File.Copy(vkDllPath, copyPath, overwrite: true);
+                        vkDllPath = copyPath;
+                        copiedToTemp = true;
+                    }
+                    
+                });
 
-            var rootCommand = new RootCommand("");
-            rootCommand.AddOption(vkdllOption);
-            rootCommand.AddOption(outOption);
-
-            rootCommand.SetHandler((path) => 
-                { 
-                    vkDllPath = path;
-                },
-                vkdllOption);
-
-            rootCommand.SetHandler((path) => 
-                { 
-                    outputPath = path;
-                },
-                outOption);
-
-            await rootCommand.InvokeAsync(args);
-
-            if (vkDllPath == null)
-            {
-                Console.WriteLine("Error: a path for --vkdll is required.");
-                Console.WriteLine(s.GetHelpText());
-                return -1;
-            }
-            if (outputPath == null)
-            {
-                outputPath = vkDllPath;
-                string copyPath = Path.GetTempFileName();
-                File.Copy(vkDllPath, copyPath, overwrite: true);
-                vkDllPath = copyPath;
-                copiedToTemp = true;
-            }
             try
             {
                 Rewrite(vkDllPath, outputPath);
@@ -78,22 +67,20 @@ namespace Vk.Rewrite
 
         private static void Rewrite(string vkDllPath, string outputPath)
         {
-            using (AssemblyDefinition vkDll = AssemblyDefinition.ReadAssembly(vkDllPath))
+            using AssemblyDefinition vkDll = AssemblyDefinition.ReadAssembly(vkDllPath);
+            LoadRefs(vkDll);
+            ModuleDefinition mainModule = vkDll.Modules[0];
+
+            s_stringHandleRef = mainModule.GetType("Vulkan.StringHandle");
+            TypeDefinition bindingHelpers = mainModule.GetType("Vulkan.BindingsHelpers");
+            s_stringToHGlobalUtf8Ref = bindingHelpers.Methods.Single(md => md.Name == "StringToHGlobalUtf8");
+            s_freeHGlobalRef = bindingHelpers.Methods.Single(md => md.Name == "FreeHGlobal");
+
+            foreach (TypeDefinition type in mainModule.Types)
             {
-                LoadRefs(vkDll);
-                ModuleDefinition mainModule = vkDll.Modules[0];
-
-                s_stringHandleRef = mainModule.GetType("Vulkan.StringHandle");
-                TypeDefinition bindingHelpers = mainModule.GetType("Vulkan.BindingsHelpers");
-                s_stringToHGlobalUtf8Ref = bindingHelpers.Methods.Single(md => md.Name == "StringToHGlobalUtf8");
-                s_freeHGlobalRef = bindingHelpers.Methods.Single(md => md.Name == "FreeHGlobal");
-
-                foreach (var type in mainModule.Types)
-                {
-                    ProcessType(type);
-                }
-                vkDll.Write(outputPath);
+                ProcessType(type);
             }
+            vkDll.Write(outputPath);
         }
 
         private static void LoadRefs(AssemblyDefinition vkDll)
