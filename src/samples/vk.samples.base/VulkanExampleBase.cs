@@ -106,7 +106,7 @@ namespace Vk.Samples
         public void InitVulkan()
         {
             VkResult err;
-            err = CreateInstance(true);
+            err = CreateInstance(false);
             if (err != VkResult.Success)
             {
                 throw new InvalidOperationException("Could not create Vulkan instance. Error: " + err);
@@ -234,8 +234,9 @@ namespace Vk.Samples
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                instanceExtensions.Add(Strings.VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+                instanceExtensions.Add(Strings.VK_KHR_portability_enumeration);
                 instanceExtensions.Add(Strings.VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+                //instanceExtensions.Add(Strings.VK_validation);
             }
             else
             {
@@ -243,6 +244,7 @@ namespace Vk.Samples
             }
 
             VkInstanceCreateInfo instanceCreateInfo = VkInstanceCreateInfo.New();
+            instanceCreateInfo.flags |= 0x00000001;
             instanceCreateInfo.pApplicationInfo = &appInfo;
 
             if (instanceExtensions.Count > 0)
@@ -259,7 +261,7 @@ namespace Vk.Samples
             if (enableValidation)
             {
                 NativeList<IntPtr> enabledLayerNames = new NativeList<IntPtr>(1);
-                enabledLayerNames.Add(Strings.StandardValidationLayeName);
+                enabledLayerNames.Add(Strings.StandardValidationLayerName);
                 instanceCreateInfo.enabledLayerCount = enabledLayerNames.Count;
                 instanceCreateInfo.ppEnabledLayerNames = (byte**)enabledLayerNames.Data;
             }
